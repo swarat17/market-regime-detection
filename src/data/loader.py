@@ -36,7 +36,8 @@ def load_dataset(
     train_ratio, val_ratio, _ = split_ratios
 
     # Load raw FPB — it only has a 'train' split
-    raw = hf_load_dataset("takala/financial_phrasebank", agreement)
+    # trust_remote_code required: FPB uses a custom dataset script on HF Hub
+    raw = hf_load_dataset("takala/financial_phrasebank", agreement, trust_remote_code=True)
     raw_train = raw["train"]
 
     # Preprocess (regime mapping + cleaning + balancing)

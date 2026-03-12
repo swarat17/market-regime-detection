@@ -18,6 +18,9 @@ import torch
 from datasets import Dataset
 from transformers import AutoTokenizer
 
+# Disable W&B for all unit tests in this module
+os.environ["WANDB_DISABLED"] = "true"
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -80,10 +83,7 @@ def _make_tiny_dataset(tokenizer, n: int = 20):
 # ---------------------------------------------------------------------------
 
 
-@patch("wandb.init")
-@patch("wandb.log")
-@patch("wandb.finish")
-def test_trainer_instantiates_from_config(mock_finish, mock_log, mock_init):
+def test_trainer_instantiates_from_config():
     """RegimeTrainer(config) sets correct method without needing GPU."""
     from src.training.trainer import RegimeTrainer
 
@@ -94,10 +94,7 @@ def test_trainer_instantiates_from_config(mock_finish, mock_log, mock_init):
         assert trainer.config["base_model"] == "distilgpt2"
 
 
-@patch("wandb.init")
-@patch("wandb.log")
-@patch("wandb.finish")
-def test_checkpoint_saved_after_short_run(mock_finish, mock_log, mock_init):
+def test_checkpoint_saved_after_short_run():
     """10-step mini-run creates a checkpoint directory with saved files."""
     from src.training.trainer import RegimeTrainer
     from src.models.base_loader import load_base_model
@@ -140,10 +137,7 @@ def test_checkpoint_saved_after_short_run(mock_finish, mock_log, mock_init):
         assert Path(checkpoint_dir).exists(), f"Checkpoint dir not found: {checkpoint_dir}"
 
 
-@patch("wandb.init")
-@patch("wandb.log")
-@patch("wandb.finish")
-def test_sidecar_json_contains_method(mock_finish, mock_log, mock_init):
+def test_sidecar_json_contains_method():
     """JSON sidecar saved alongside checkpoint has 'method' key matching config."""
     from src.training.trainer import RegimeTrainer
     from transformers import AutoModelForSequenceClassification

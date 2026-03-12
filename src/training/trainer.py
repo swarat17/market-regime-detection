@@ -142,6 +142,13 @@ class RegimeTrainer:
 
     def _build_training_args(self, output_dir: Path) -> TrainingArguments:
         """Build HuggingFace TrainingArguments from config."""
+        import os
+
+        # Allow disabling W&B via env var (used in unit tests)
+        report_to = self.config.get("report_to", "wandb")
+        if os.environ.get("WANDB_DISABLED", "").lower() in ("true", "1"):
+            report_to = "none"
+
         return TrainingArguments(
             output_dir=str(output_dir),
             num_train_epochs=self.config.get("num_epochs", 3),
@@ -151,13 +158,13 @@ class RegimeTrainer:
             learning_rate=self.config.get("learning_rate", 3e-4),
             fp16=self.config.get("fp16", True),
             gradient_checkpointing=self.config.get("gradient_checkpointing", True),
-            evaluation_strategy="epoch",
+            eval_strategy="epoch",
             save_strategy="epoch",
             logging_steps=10,
             load_best_model_at_end=True,
             metric_for_best_model="eval_f1_macro",
             greater_is_better=True,
-            report_to="wandb",
+            report_to=report_to,
             dataloader_num_workers=0,  # Windows: no multiprocessing fork
             optim=self.config.get("optim", "paged_adamw_8bit"),
             seed=self.config.get("seed", 42),
