@@ -82,6 +82,7 @@ def load_base_model(
         "torch_dtype": torch.float16,  # Hard-coded: no bfloat16 on Turing
         "device_map": "auto",
         "ignore_mismatched_sizes": True,
+        "low_cpu_mem_usage": True,  # Stream shards one at a time — reduces peak RAM
     }
 
     if quantize:
