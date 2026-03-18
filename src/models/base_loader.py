@@ -74,6 +74,11 @@ def load_base_model(
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
+    # Limit VRAM to 3.5GB — leaves headroom during shard loading/quantization.
+    # Without this, accelerate uses 90% of VRAM (3.6GB) leaving no buffer,
+    # which causes silent OOM kills on Windows when nf4 double-quant is applied.
+    max_memory = {0: "3500MiB", "cpu": "12GiB"}
+
     # Build model kwargs
     model_kwargs = {
         "num_labels": num_labels,
@@ -81,6 +86,7 @@ def load_base_model(
         "label2id": LABEL2ID,
         "torch_dtype": torch.float16,  # Hard-coded: no bfloat16 on Turing
         "device_map": "auto",
+        "max_memory": max_memory,
         "ignore_mismatched_sizes": True,
         "low_cpu_mem_usage": True,  # Stream shards one at a time — reduces peak RAM
     }
