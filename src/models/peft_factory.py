@@ -62,6 +62,13 @@ def create_peft_model(base_model, config: dict) -> dict:
     peft_config = _build_peft_config(method, config)
     peft_model = get_peft_model(base_model, peft_config)
 
+    # Prefix tuning compatibility fix for transformers >= 4.44:
+    # PEFT passes past_key_values as a legacy tuple, but Llama 4.44+ expects a
+    # DynamicCache object with .get_seq_length(). Patch the inner LlamaModel
+    # forward to convert tuples on the fly.
+    if method == "prefix_tuning":
+        _patch_llama_legacy_cache(peft_model)
+
     trainable_params, total_params = _count_parameters(peft_model)
     trainable_pct = 100.0 * trainable_params / total_params if total_params > 0 else 0.0
 
@@ -130,6 +137,45 @@ def _build_peft_config(method: str, config: dict):
             f"Unknown PEFT method: '{method}'. "
             "Supported: 'lora', 'qlora', 'prefix_tuning', 'ia3'."
         )
+
+
+def _patch_llama_legacy_cache(peft_model) -> None:
+    """
+    Monkey-patch the inner LlamaModel.forward to convert legacy tuple
+    past_key_values to DynamicCache.
+
+    Root cause: PEFT 0.12 prefix tuning passes past_key_values as a tuple,
+    but transformers 4.44+ Llama expects a Cache object with .get_seq_length().
+    This patch converts on the fly without modifying transformers or PEFT source.
+    """
+    try:
+        from transformers.cache_utils import DynamicCache
+
+        # Navigate to the inner LlamaModel (base_model.model for SEQ_CLS)
+        inner = None
+        if hasattr(peft_model, "base_model"):
+            bm = peft_model.base_model
+            if hasattr(bm, "model") and hasattr(bm.model, "model"):
+                inner = bm.model.model  # LlamaForSequenceClassification.model.model
+            elif hasattr(bm, "model"):
+                inner = bm.model
+
+        if inner is None:
+            logger.warning("Prefix tuning cache patch: could not locate inner LlamaModel — skipping.")
+            return
+
+        original_forward = inner.forward
+
+        def patched_forward(*args, **kwargs):
+            pkv = kwargs.get("past_key_values", None)
+            if isinstance(pkv, tuple):
+                kwargs["past_key_values"] = DynamicCache.from_legacy_cache(pkv)
+            return original_forward(*args, **kwargs)
+
+        inner.forward = patched_forward
+        logger.info("Prefix tuning: applied legacy cache → DynamicCache patch for transformers 4.44+.")
+    except Exception as e:
+        logger.warning(f"Prefix tuning cache patch failed (will attempt training anyway): {e}")
 
 
 def _count_parameters(model) -> tuple[int, int]:
