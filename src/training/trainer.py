@@ -114,7 +114,18 @@ class RegimeTrainer:
         )
 
         logger.info(f"Starting training | steps_per_epoch={len(train_dataset)}")
-        hf_trainer.train()
+        try:
+            hf_trainer.train()
+        except TypeError as e:
+            # PEFT prefix tuning + transformers 4.44: active_adapters is a method,
+            # not a list, so _load_best_model() crashes after training completes.
+            # Training itself is finished — log and continue to save.
+            if "active_adapters" in str(e) or "not subscriptable" in str(e):
+                logger.warning(
+                    f"Ignoring known PEFT/transformers compatibility error at end of training: {e}"
+                )
+            else:
+                raise
 
         # Save best model
         hf_trainer.save_model(str(checkpoint_dir))
@@ -161,7 +172,9 @@ class RegimeTrainer:
             eval_strategy="epoch",
             save_strategy="epoch",
             logging_steps=10,
-            load_best_model_at_end=True,
+            # Prefix tuning + transformers 4.44 crashes in _load_best_model due to
+            # active_adapters being a method. Disable for prefix tuning.
+            load_best_model_at_end=(self.method not in ("prefix_tuning",)),
             metric_for_best_model="eval_f1_macro",
             greater_is_better=True,
             report_to=report_to,
