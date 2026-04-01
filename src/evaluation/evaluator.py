@@ -138,21 +138,64 @@ class Evaluator:
 
     def _run_inference(self, ckpt_path: Path) -> tuple:
         """
-        Load model from checkpoint and run inference on self.test_dataset.
+        Load a PEFT checkpoint and run inference on self.test_dataset.
+
+        PEFT saves only adapter weights, not the base model. We must:
+        1. Read the sidecar to get the base model path + quantization config
+        2. Load the base model with BitsAndBytes quantization
+        3. Load the PEFT adapter on top with PeftModel.from_pretrained
 
         Returns:
             (preds, labels, probs, inference_time_ms)
         """
         import torch
-        from transformers import AutoModelForSequenceClassification
+        from peft import PeftModel
+        from transformers import AutoModelForSequenceClassification, BitsAndBytesConfig
+
+        from src.data.preprocessor import ID2LABEL, LABEL2ID
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        model = AutoModelForSequenceClassification.from_pretrained(
-            str(ckpt_path),
-            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-            device_map="auto" if device == "cuda" else None,
+        # Read sidecar for base model info
+        sidecar_path = ckpt_path / "training_config.json"
+        with open(sidecar_path) as f:
+            sidecar = json.load(f)
+
+        model_name_or_path = sidecar.get("model_name_or_path", "meta-llama/Llama-3.2-3B")
+
+        # Same memory limit as training to avoid disk-offload OOM
+        max_memory = {0: "3500MiB", "cpu": "12GiB"}
+
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="fp4",
+            bnb_4bit_compute_dtype=torch.float16,
         )
+
+        base_model = AutoModelForSequenceClassification.from_pretrained(
+            model_name_or_path,
+            num_labels=3,
+            id2label=ID2LABEL,
+            label2id=LABEL2ID,
+            quantization_config=bnb_config,
+            torch_dtype=torch.float16,
+            device_map="auto",
+            max_memory=max_memory,
+            low_cpu_mem_usage=True,
+            ignore_mismatched_sizes=True,
+        )
+        base_model.config.pad_token_id = base_model.config.eos_token_id
+
+        # Load PEFT adapter weights on top of the base model
+        model = PeftModel.from_pretrained(base_model, str(ckpt_path))
+
+        # Cast ALL float32 parameters to fp16 to match the quantized base model.
+        # IA³ scaling vectors are trainable float32 by default and cause dtype
+        # mismatch (query=fp16, key/value=float32) during attention forward pass.
+        for param in model.parameters():
+            if param.dtype == torch.float32:
+                param.data = param.data.to(torch.float16)
+
         model.eval()
 
         all_preds, all_labels, all_probs = [], [], []
@@ -162,7 +205,15 @@ class Evaluator:
 
         loader = DataLoader(self.test_dataset, batch_size=8, shuffle=False)
 
-        with torch.no_grad():
+        # autocast ensures all operations (including IA³ scaling) run in fp16,
+        # preventing dtype mismatches between query (fp16) and key/value (float32).
+        autocast_ctx = (
+            torch.autocast(device_type="cuda", dtype=torch.float16)
+            if device == "cuda"
+            else torch.autocast(device_type="cpu", dtype=torch.bfloat16)
+        )
+
+        with torch.no_grad(), autocast_ctx:
             for batch in loader:
                 input_ids = batch["input_ids"].to(device)
                 attention_mask = batch["attention_mask"].to(device)
