@@ -1,7 +1,6 @@
 # PEFT Regime Benchmark
 
-![CI](https://github.com/YOUR_USERNAME/peft-regime-benchmark/actions/workflows/ci.yml/badge.svg)
-[![HF Space](https://img.shields.io/badge/🤗%20HF%20Space-Live%20Demo-blue)](https://huggingface.co/spaces/YOUR_USERNAME/peft-regime-benchmark)
+![CI](https://github.com/swarat17/peft-regime-benchmark/actions/workflows/ci.yml/badge.svg)
 [![W&B](https://img.shields.io/badge/Weights%20%26%20Biases-Project-orange)](https://wandb.ai/swaratsarkar-university-at-buffalo/peft-regime-benchmark)
 
 A rigorous benchmark comparing **LoRA, QLoRA, Prefix Tuning, and (IA)³** fine-tuning methods on **market regime detection** — classifying financial text (Fed statements, earnings calls, macro news) as **Bull**, **Bear**, or **Volatile**.
@@ -91,7 +90,7 @@ F1 Macro and trainable parameter count as a function of LoRA rank (30 training s
 
 ```bash
 # 1. Clone and set up environment
-git clone https://github.com/YOUR_USERNAME/peft-regime-benchmark.git
+git clone https://github.com/swarat17/peft-regime-benchmark.git
 cd peft-regime-benchmark
 
 # 2. Install PyTorch with CUDA (do this first)
@@ -139,4 +138,4 @@ Runs under **~$5 compute cost** using 4-bit QLoRA on a consumer GPU (tested on G
 
 ## Stack
 
-HuggingFace PEFT · bitsandbytes · Transformers · Weights & Biases · Llama-3.2-3B · Gradio · Hugging Face Spaces · GitHub Actions
+HuggingFace PEFT · bitsandbytes · Transformers · Weights & Biases · Llama-3.2-3B · Gradio · GitHub Actions
