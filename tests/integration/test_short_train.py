@@ -43,9 +43,7 @@ def test_lora_trains_50_steps_no_crash():
     trainer.setup()
 
     dataset_dict = load_dataset(seed=42)
-    tokenized = get_tokenized_dataset(
-        dataset_dict, trainer.tokenizer, max_length=128
-    )
+    tokenized = get_tokenized_dataset(dataset_dict, trainer.tokenizer, max_length=128)
 
     checkpoint_dir = trainer.train(
         train_dataset=tokenized["train"],

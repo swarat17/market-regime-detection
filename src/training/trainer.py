@@ -14,7 +14,6 @@ import yaml
 from sklearn.metrics import accuracy_score, f1_score
 from transformers import DataCollatorWithPadding, Trainer, TrainingArguments
 
-from src.data.loader import get_tokenized_dataset, load_dataset
 from src.models.base_loader import load_base_model
 from src.models.peft_factory import create_peft_model
 from src.training.callbacks import RegimeBenchmarkCallback
@@ -49,7 +48,9 @@ class RegimeTrainer:
 
     def setup(self):
         """Load base model, apply PEFT adapter."""
-        logger.info(f"Setting up trainer | method={self.method} | base={self.base_model_name}")
+        logger.info(
+            f"Setting up trainer | method={self.method} | base={self.base_model_name}"
+        )
 
         self.model, self.tokenizer = load_base_model(
             model_name=self.config.get("model_name_or_path", self.base_model_name),
@@ -76,9 +77,14 @@ class RegimeTrainer:
             raise RuntimeError("Call setup() before train()")
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        checkpoint_dir = Path(
-            self.config.get("output_dir", f"models/{self.method}_{self.base_model_name}")
-        ) / f"{self.method}_{self.base_model_name}_{timestamp}"
+        checkpoint_dir = (
+            Path(
+                self.config.get(
+                    "output_dir", f"models/{self.method}_{self.base_model_name}"
+                )
+            )
+            / f"{self.method}_{self.base_model_name}_{timestamp}"
+        )
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
         # Init W&B
@@ -165,7 +171,9 @@ class RegimeTrainer:
             num_train_epochs=self.config.get("num_epochs", 3),
             per_device_train_batch_size=self.config.get("batch_size", 1),
             per_device_eval_batch_size=self.config.get("batch_size", 1),
-            gradient_accumulation_steps=self.config.get("gradient_accumulation_steps", 16),
+            gradient_accumulation_steps=self.config.get(
+                "gradient_accumulation_steps", 16
+            ),
             learning_rate=self.config.get("learning_rate", 3e-4),
             fp16=self.config.get("fp16", True),
             gradient_checkpointing=self.config.get("gradient_checkpointing", True),

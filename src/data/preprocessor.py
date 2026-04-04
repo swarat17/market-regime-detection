@@ -5,12 +5,15 @@ FinancialPhraseBank labels: 0=negative, 1=neutral, 2=positive
 Regime mapping: positive→Bull(0), negative→Bear(1), neutral→Volatile(2)
 """
 
-from collections import Counter
 
 from datasets import Dataset
 
 # Label mappings
-SENTIMENT_TO_REGIME = {2: 0, 0: 1, 1: 2}  # positive→Bull, negative→Bear, neutral→Volatile
+SENTIMENT_TO_REGIME = {
+    2: 0,
+    0: 1,
+    1: 2,
+}  # positive→Bull, negative→Bear, neutral→Volatile
 REGIME_NAMES = {0: "bull", 1: "bear", 2: "volatile"}
 LABEL2ID = {"bull": 0, "bear": 1, "volatile": 2}
 ID2LABEL = {0: "bull", 1: "bear", 2: "volatile"}
@@ -52,7 +55,9 @@ def preprocess_dataset(dataset: Dataset, balance_classes: bool = True) -> Datase
     dataset = dataset.map(map_sentiment_to_regime)
 
     # Remove examples with empty text
-    dataset = dataset.filter(lambda x: x["text"] is not None and len(x["text"].strip()) > 0)
+    dataset = dataset.filter(
+        lambda x: x["text"] is not None and len(x["text"].strip()) > 0
+    )
 
     # Keep only text and label columns
     cols_to_keep = ["text", "label"]

@@ -78,6 +78,7 @@ def main():
                 sidecar = json.load(f)
             model_path = sidecar.get("model_name_or_path", "meta-llama/Llama-3.2-3B")
             from transformers import AutoTokenizer
+
             tokenizer = AutoTokenizer.from_pretrained(model_path)
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token

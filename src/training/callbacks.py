@@ -8,7 +8,12 @@ trainable_params, gpu_memory_mb, epoch_time_seconds.
 import time
 
 import torch
-from transformers import TrainerCallback, TrainerControl, TrainerState, TrainingArguments
+from transformers import (
+    TrainerCallback,
+    TrainerControl,
+    TrainerState,
+    TrainingArguments,
+)
 
 from src.utils.logger import log_metrics, logger
 
@@ -45,14 +50,19 @@ class RegimeBenchmarkCallback(TrainerCallback):
         **kwargs,
     ):
         """Log epoch metrics to W&B."""
-        epoch_time = time.time() - self._epoch_start_time if self._epoch_start_time else 0.0
+        epoch_time = (
+            time.time() - self._epoch_start_time if self._epoch_start_time else 0.0
+        )
 
         gpu_memory_mb = 0.0
         if torch.cuda.is_available():
             gpu_memory_mb = torch.cuda.max_memory_allocated() / (1024**2)
 
         # Extract latest metrics from trainer log history
-        metrics = {"trainable_params": self.trainable_params, "epoch_time_seconds": epoch_time}
+        metrics = {
+            "trainable_params": self.trainable_params,
+            "epoch_time_seconds": epoch_time,
+        }
 
         if torch.cuda.is_available():
             metrics["gpu_memory_mb"] = gpu_memory_mb
@@ -69,7 +79,9 @@ class RegimeBenchmarkCallback(TrainerCallback):
             f"Epoch {state.epoch:.0f} | "
             f"time={epoch_time:.1f}s | "
             f"gpu_mem={gpu_memory_mb:.0f}MB | "
-            + " | ".join(f"{k}={v:.4f}" for k, v in metrics.items() if isinstance(v, float))
+            + " | ".join(
+                f"{k}={v:.4f}" for k, v in metrics.items() if isinstance(v, float)
+            )
         )
 
     def on_log(

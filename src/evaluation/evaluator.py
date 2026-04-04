@@ -6,7 +6,6 @@ computes all metrics, and saves results to CSV + plots.
 """
 
 import json
-import logging
 import time
 from pathlib import Path
 
@@ -68,7 +67,9 @@ class Evaluator:
                 rows.append(result)
 
         if not rows:
-            logger.warning("No valid checkpoints evaluated — returning empty DataFrame.")
+            logger.warning(
+                "No valid checkpoints evaluated — returning empty DataFrame."
+            )
             return pd.DataFrame(columns=EXPECTED_COLUMNS)
 
         df = pd.DataFrame(rows, columns=EXPECTED_COLUMNS)
@@ -111,7 +112,9 @@ class Evaluator:
         trainable_params = sidecar.get("trainable_params", 0)
 
         if self.test_dataset is None or self.tokenizer is None:
-            logger.warning("No test dataset or tokenizer provided — returning metadata-only row.")
+            logger.warning(
+                "No test dataset or tokenizer provided — returning metadata-only row."
+            )
             return self._empty_row(method, base_model, trainable_params)
 
         try:
@@ -161,7 +164,9 @@ class Evaluator:
         with open(sidecar_path) as f:
             sidecar = json.load(f)
 
-        model_name_or_path = sidecar.get("model_name_or_path", "meta-llama/Llama-3.2-3B")
+        model_name_or_path = sidecar.get(
+            "model_name_or_path", "meta-llama/Llama-3.2-3B"
+        )
 
         # Same memory limit as training to avoid disk-offload OOM
         max_memory = {0: "3500MiB", "cpu": "12GiB"}
@@ -285,7 +290,9 @@ class Evaluator:
         base_models = df_plot["base_model"].unique()
         for i, bm in enumerate(base_models):
             subset = df_plot[df_plot["base_model"] == bm].set_index("method")
-            vals = [subset.loc[m, "f1_macro"] if m in subset.index else 0 for m in methods]
+            vals = [
+                subset.loc[m, "f1_macro"] if m in subset.index else 0 for m in methods
+            ]
             ax.bar(x + i * width, vals, width, label=bm)
         ax.set_xticks(x + width / 2)
         ax.set_xticklabels(methods)
@@ -302,7 +309,10 @@ class Evaluator:
         df_rcs = df_plot.dropna(subset=["regime_confidence_score"])
         for i, bm in enumerate(base_models):
             subset = df_rcs[df_rcs["base_model"] == bm].set_index("method")
-            vals = [subset.loc[m, "regime_confidence_score"] if m in subset.index else 0 for m in methods]
+            vals = [
+                subset.loc[m, "regime_confidence_score"] if m in subset.index else 0
+                for m in methods
+            ]
             ax.bar(x + i * width, vals, width, label=bm)
         ax.set_xticks(x + width / 2)
         ax.set_xticklabels(methods)
@@ -315,9 +325,15 @@ class Evaluator:
         plt.close(fig)
 
         # --- Plot 3: Per-class F1 heatmap ---
-        heatmap_data = df_plot[["method", "base_model", "bull_f1", "bear_f1", "volatile_f1"]].copy()
-        heatmap_data["label"] = heatmap_data["method"] + "\n" + heatmap_data["base_model"]
-        heatmap_data = heatmap_data.set_index("label")[["bull_f1", "bear_f1", "volatile_f1"]]
+        heatmap_data = df_plot[
+            ["method", "base_model", "bull_f1", "bear_f1", "volatile_f1"]
+        ].copy()
+        heatmap_data["label"] = (
+            heatmap_data["method"] + "\n" + heatmap_data["base_model"]
+        )
+        heatmap_data = heatmap_data.set_index("label")[
+            ["bull_f1", "bear_f1", "volatile_f1"]
+        ]
         heatmap_data.columns = ["Bull", "Bear", "Volatile"]
         fig, ax = plt.subplots(figsize=(8, max(4, len(heatmap_data))))
         sns.heatmap(

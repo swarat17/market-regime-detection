@@ -149,5 +149,7 @@ def compute_all_metrics(
         "f1_macro": f1_macro(preds, labels),
         "per_class_f1": per_class_f1(preds, labels),
         "confusion_matrix": confusion_matrix_dict(preds, labels),
-        "regime_confidence_score": regime_confidence_score(preds, labels, probabilities),
+        "regime_confidence_score": regime_confidence_score(
+            preds, labels, probabilities
+        ),
     }

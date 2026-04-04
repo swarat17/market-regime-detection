@@ -29,6 +29,6 @@ def test_interpretation_text_not_empty():
     from frontend.app import generate_interpretation
 
     result = generate_interpretation("bear", 0.91)
-    assert isinstance(result, str) and len(result) > 0, (
-        f"Expected non-empty string from generate_interpretation, got: {result!r}"
-    )
+    assert (
+        isinstance(result, str) and len(result) > 0
+    ), f"Expected non-empty string from generate_interpretation, got: {result!r}"

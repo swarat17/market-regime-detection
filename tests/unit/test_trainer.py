@@ -10,11 +10,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
-import numpy as np
-import pytest
-import torch
 from datasets import Dataset
 from transformers import AutoTokenizer
 
@@ -97,7 +93,6 @@ def test_trainer_instantiates_from_config():
 def test_checkpoint_saved_after_short_run():
     """10-step mini-run creates a checkpoint directory with saved files."""
     from src.training.trainer import RegimeTrainer
-    from src.models.base_loader import load_base_model
 
     with tempfile.TemporaryDirectory() as tmp:
         config = _make_tiny_config(tmp, max_steps=10)
@@ -134,7 +129,9 @@ def test_checkpoint_saved_after_short_run():
 
         checkpoint_dir = trainer.train(train_ds, eval_ds)
 
-        assert Path(checkpoint_dir).exists(), f"Checkpoint dir not found: {checkpoint_dir}"
+        assert Path(
+            checkpoint_dir
+        ).exists(), f"Checkpoint dir not found: {checkpoint_dir}"
 
 
 def test_sidecar_json_contains_method():

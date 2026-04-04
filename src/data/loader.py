@@ -4,11 +4,10 @@ Data loading utilities for the PEFT Regime Benchmark.
 Loads FinancialPhraseBank, applies regime labeling, and returns stratified splits.
 """
 
-from pathlib import Path
 
 from datasets import DatasetDict, load_dataset as hf_load_dataset
 
-from src.data.preprocessor import LABEL2ID, ID2LABEL, preprocess_dataset
+from src.data.preprocessor import preprocess_dataset
 
 
 def load_dataset(
@@ -37,7 +36,9 @@ def load_dataset(
 
     # Load raw FPB — it only has a 'train' split
     # trust_remote_code required: FPB uses a custom dataset script on HF Hub
-    raw = hf_load_dataset("takala/financial_phrasebank", agreement, trust_remote_code=True)
+    raw = hf_load_dataset(
+        "takala/financial_phrasebank", agreement, trust_remote_code=True
+    )
     raw_train = raw["train"]
 
     # Preprocess (regime mapping + cleaning + balancing)
@@ -96,7 +97,9 @@ def get_class_distribution(dataset_split) -> dict:
     }
 
 
-def get_tokenized_dataset(dataset_dict: DatasetDict, tokenizer, max_length: int = 128) -> DatasetDict:
+def get_tokenized_dataset(
+    dataset_dict: DatasetDict, tokenizer, max_length: int = 128
+) -> DatasetDict:
     """
     Tokenize all splits in the dataset.
 

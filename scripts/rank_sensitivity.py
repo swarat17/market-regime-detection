@@ -68,8 +68,6 @@ def parse_args():
 def run_rank_sweep(max_steps: int = -1, results_dir: str = "results") -> pd.DataFrame:
     from src.data.loader import get_tokenized_dataset, load_dataset
     from src.evaluation.metrics import compute_all_metrics
-    from src.models.base_loader import load_base_model
-    from src.models.peft_factory import create_peft_model
     from src.training.trainer import RegimeTrainer
 
     import numpy as np
@@ -92,7 +90,11 @@ def run_rank_sweep(max_steps: int = -1, results_dir: str = "results") -> pd.Data
         )
 
         config = {
-            **{k: v for k, v in BASE_CONFIG.items() if not k.startswith("target_modules_")},
+            **{
+                k: v
+                for k, v in BASE_CONFIG.items()
+                if not k.startswith("target_modules_")
+            },
             "lora_r": rank,
             "target_modules": target_modules,
             "output_dir": f"models/rank_sweep/r{rank}",
@@ -103,9 +105,11 @@ def run_rank_sweep(max_steps: int = -1, results_dir: str = "results") -> pd.Data
         trainer = RegimeTrainer(config)
         trainer.setup()
 
-        tokenized = get_tokenized_dataset(dataset_dict, trainer.tokenizer, max_length=128)
+        tokenized = get_tokenized_dataset(
+            dataset_dict, trainer.tokenizer, max_length=128
+        )
 
-        checkpoint_dir = trainer.train(
+        trainer.train(
             train_dataset=tokenized["train"],
             eval_dataset=tokenized["validation"],
         )
@@ -128,7 +132,9 @@ def run_rank_sweep(max_steps: int = -1, results_dir: str = "results") -> pd.Data
                 attention_mask = batch["attention_mask"].to(device)
                 batch_labels = batch["label"].numpy()
 
-                outputs = trainer.model(input_ids=input_ids, attention_mask=attention_mask)
+                outputs = trainer.model(
+                    input_ids=input_ids, attention_mask=attention_mask
+                )
                 logits = outputs.logits.float().cpu().numpy()
 
                 exp = np.exp(logits - np.max(logits, axis=-1, keepdims=True))
@@ -180,7 +186,14 @@ def _plot_rank_sensitivity(df: pd.DataFrame, plots_dir: Path):
 
     ax1.set_xlabel("LoRA Rank (r)")
     ax1.set_ylabel("F1 Macro", color=color_f1)
-    ax1.plot(df["lora_r"], df["f1_macro"], "o-", color=color_f1, linewidth=2, label="F1 Macro")
+    ax1.plot(
+        df["lora_r"],
+        df["f1_macro"],
+        "o-",
+        color=color_f1,
+        linewidth=2,
+        label="F1 Macro",
+    )
     ax1.tick_params(axis="y", labelcolor=color_f1)
     ax1.set_ylim(0, 1)
 

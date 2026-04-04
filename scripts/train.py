@@ -84,7 +84,11 @@ def main():
     # Load and tokenize data
     logger.info("Loading dataset...")
     dataset_dict = load_dataset(seed=args.seed)
-    tokenized = get_tokenized_dataset(dataset_dict, trainer.tokenizer, max_length=trainer.config.get("max_length", 128))
+    tokenized = get_tokenized_dataset(
+        dataset_dict,
+        trainer.tokenizer,
+        max_length=trainer.config.get("max_length", 128),
+    )
 
     from src.data.loader import get_class_distribution
 

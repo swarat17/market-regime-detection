@@ -6,13 +6,10 @@ Uses temp directories with mock checkpoint sidecars.
 """
 
 import json
-import os
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
-import pytest
 
 from src.evaluation.evaluator import EXPECTED_COLUMNS, Evaluator
 

@@ -8,7 +8,6 @@ Uses real FinancialPhraseBank dataset (small, fast to download).
 import pytest
 
 from src.data.loader import load_dataset, get_class_distribution
-from src.data.preprocessor import preprocess_dataset, SENTIMENT_TO_REGIME
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +40,9 @@ def test_stratified_split_preserves_distribution(dataset):
         distributions[split] = get_class_distribution(dataset[split])
 
     for regime in ["bull", "bear", "volatile"]:
-        pcts = [distributions[split][regime] for split in ["train", "validation", "test"]]
+        pcts = [
+            distributions[split][regime] for split in ["train", "validation", "test"]
+        ]
         max_diff = max(pcts) - min(pcts)
         assert max_diff <= 5.0, (
             f"Class '{regime}' distribution varies by {max_diff:.1f}pp across splits "
@@ -54,6 +55,6 @@ def test_get_class_distribution_sums_to_100(dataset):
     for split in ["train", "validation", "test"]:
         dist = get_class_distribution(dataset[split])
         total = sum(dist.values())
-        assert abs(total - 100.0) < 0.5, (
-            f"Distribution for {split} sums to {total:.2f}, expected ~100"
-        )
+        assert (
+            abs(total - 100.0) < 0.5
+        ), f"Distribution for {split} sums to {total:.2f}, expected ~100"

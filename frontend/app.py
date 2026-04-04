@@ -59,11 +59,16 @@ def generate_interpretation(regime: str, confidence: float) -> str:
 # Model discovery
 # ---------------------------------------------------------------------------
 
+
 def _find_checkpoint(method_dir: Path) -> Path | None:
     """Find the single checkpoint subdirectory inside a method folder."""
     if not method_dir.exists():
         return None
-    subdirs = [d for d in method_dir.iterdir() if d.is_dir() and (d / "adapter_config.json").exists()]
+    subdirs = [
+        d
+        for d in method_dir.iterdir()
+        if d.is_dir() and (d / "adapter_config.json").exists()
+    ]
     if not subdirs:
         return None
     # Pick the most recently modified
@@ -94,6 +99,7 @@ AVAILABLE_MODELS = _discover_models()
 # Inference engine
 # ---------------------------------------------------------------------------
 
+
 class InferenceEngine:
     """
     Loads and caches a PEFT model for single-sample inference.
@@ -112,7 +118,11 @@ class InferenceEngine:
         """Load base model + PEFT adapter from checkpoint."""
         import torch
         from peft import PeftModel
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer, BitsAndBytesConfig
+        from transformers import (
+            AutoModelForSequenceClassification,
+            AutoTokenizer,
+            BitsAndBytesConfig,
+        )
 
         from src.data.preprocessor import ID2LABEL, LABEL2ID
 
@@ -214,7 +224,9 @@ class InferenceEngine:
         # Single-sample RCS: perfect if correct (unknown), so just show confidence-based score
         # We report 1 - (max_prob_wrong * severity) as a per-sample risk signal
         # Since we don't have ground truth, report the confidence as the RCS proxy
-        rcs_display = f"{confidence:.3f} (confidence proxy — no ground truth for single sample)"
+        rcs_display = (
+            f"{confidence:.3f} (confidence proxy — no ground truth for single sample)"
+        )
 
         return {
             "regime": pred_label,
@@ -235,6 +247,7 @@ _engine = InferenceEngine()
 # ---------------------------------------------------------------------------
 # Gradio callback
 # ---------------------------------------------------------------------------
+
 
 def classify(text: str, model_name: str):
     """Gradio callback: run inference and format outputs."""
@@ -272,13 +285,21 @@ def classify(text: str, model_name: str):
 # Benchmark data helpers
 # ---------------------------------------------------------------------------
 
+
 def _load_benchmark_df() -> pd.DataFrame:
     csv_path = RESULTS_DIR / "benchmark_results.csv"
     if not csv_path.exists():
         return pd.DataFrame({"message": ["results/benchmark_results.csv not found"]})
     df = pd.read_csv(csv_path)
     # Round floats for display
-    float_cols = ["accuracy", "f1_macro", "bull_f1", "bear_f1", "volatile_f1", "regime_confidence_score"]
+    float_cols = [
+        "accuracy",
+        "f1_macro",
+        "bull_f1",
+        "bear_f1",
+        "volatile_f1",
+        "regime_confidence_score",
+    ]
     for col in float_cols:
         if col in df.columns:
             df[col] = df[col].apply(lambda x: f"{x:.4f}" if pd.notna(x) else "—")
@@ -304,10 +325,13 @@ def _best_method_callout(df: pd.DataFrame) -> str:
 # Build Gradio UI
 # ---------------------------------------------------------------------------
 
+
 def build_app():
     import gradio as gr
 
-    model_choices = list(AVAILABLE_MODELS.keys()) if AVAILABLE_MODELS else ["No models found"]
+    model_choices = (
+        list(AVAILABLE_MODELS.keys()) if AVAILABLE_MODELS else ["No models found"]
+    )
     benchmark_df = _load_benchmark_df()
     best_callout = _best_method_callout(benchmark_df)
 
@@ -349,18 +373,32 @@ Regimes: 🟢 Bull · 🔴 Bear · 🟡 Volatile
                         )
 
                     with gr.Column(scale=1):
-                        badge_out = gr.Textbox(label="Predicted Regime", interactive=False)
+                        badge_out = gr.Textbox(
+                            label="Predicted Regime", interactive=False
+                        )
                         confidence_out = gr.Textbox(
                             label="Class Probabilities", lines=3, interactive=False
                         )
-                        rcs_out = gr.Textbox(label="Regime Confidence Score", interactive=False)
-                        interp_out = gr.Textbox(label="Interpretation", interactive=False)
-                        latency_out = gr.Textbox(label="Inference Latency", interactive=False)
+                        rcs_out = gr.Textbox(
+                            label="Regime Confidence Score", interactive=False
+                        )
+                        interp_out = gr.Textbox(
+                            label="Interpretation", interactive=False
+                        )
+                        latency_out = gr.Textbox(
+                            label="Inference Latency", interactive=False
+                        )
 
                 classify_btn.click(
                     fn=classify,
                     inputs=[text_input, model_dropdown],
-                    outputs=[badge_out, confidence_out, rcs_out, interp_out, latency_out],
+                    outputs=[
+                        badge_out,
+                        confidence_out,
+                        rcs_out,
+                        interp_out,
+                        latency_out,
+                    ],
                 )
 
             # ------------------------------------------------------------------
@@ -383,7 +421,9 @@ Regimes: 🟢 Bull · 🔴 Bear · 🟡 Volatile
                 )
 
                 if rank_plot_exists:
-                    gr.Markdown("### LoRA Rank Sensitivity (r = 4, 8, 16, 32, 64 | 30 steps each)")
+                    gr.Markdown(
+                        "### LoRA Rank Sensitivity (r = 4, 8, 16, 32, 64 | 30 steps each)"
+                    )
                     gr.Image(
                         value=rank_plot_path,
                         label="F1 vs Trainable Parameters across LoRA ranks",

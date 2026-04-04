@@ -17,12 +17,18 @@ CONFIG_DIR = Path(__file__).parent.parent.parent / "configs"
 
 def test_all_configs_loadable():
     """All four YAML config files must load without error and have required keys."""
-    required_keys = ["method", "base_model", "learning_rate", "num_epochs", "output_dir"]
+    required_keys = [
+        "method",
+        "base_model",
+        "learning_rate",
+        "num_epochs",
+        "output_dir",
+    ]
     config_files = list(CONFIG_DIR.glob("*.yaml"))
 
-    assert len(config_files) == 4, (
-        f"Expected 4 config files in configs/, found {len(config_files)}: {config_files}"
-    )
+    assert (
+        len(config_files) == 4
+    ), f"Expected 4 config files in configs/, found {len(config_files)}: {config_files}"
 
     for cfg_path in config_files:
         with open(cfg_path) as f:

@@ -5,8 +5,6 @@ Uses tiny GPT-2 mock model — no GPU or model downloads needed.
 """
 
 import pytest
-import torch
-from unittest.mock import patch, MagicMock
 
 
 def _make_mock_model(is_quantized: bool = False):
@@ -47,7 +45,7 @@ def mock_quantized_model():
 
 def test_lora_reduces_trainable_params(mock_model):
     """LoRA model has fewer trainable params than full fine-tune."""
-    from src.models.peft_factory import create_peft_model, _count_parameters
+    from src.models.peft_factory import create_peft_model
 
     total_params = sum(p.numel() for p in mock_model.parameters())
 
@@ -110,7 +108,9 @@ def test_all_methods_produce_valid_model():
     for config in methods_and_configs:
         model = _make_mock_model(is_quantized=False)
         result = create_peft_model(model, config)
-        assert result["model"] is not None, f"Method {config['method']} returned None model"
+        assert (
+            result["model"] is not None
+        ), f"Method {config['method']} returned None model"
         assert "trainable_params" in result
 
     # QLoRA requires quantized model
