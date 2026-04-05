@@ -52,5 +52,3 @@ jobs:
         env:
           WANDB_DISABLED: "true"
           TOKENIZERS_PARALLELISM: "false"
-          HF_DATASETS_OFFLINE: "1"
-          TRANSFORMERS_OFFLINE: "1"
