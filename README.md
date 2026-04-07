@@ -1,6 +1,6 @@
 # PEFT Regime Benchmark
 
-![CI](https://github.com/swarat17/peft-regime-benchmark/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/swarat17/market-regime-detection/actions/workflows/ci.yml/badge.svg)
 [![W&B](https://img.shields.io/badge/Weights%20%26%20Biases-Project-orange)](https://wandb.ai/swaratsarkar-university-at-buffalo/peft-regime-benchmark)
 
 A rigorous benchmark comparing **LoRA, QLoRA, Prefix Tuning, and (IA)³** fine-tuning methods on **market regime detection** — classifying financial text (Fed statements, earnings calls, macro news) as **Bull**, **Bear**, or **Volatile**.
@@ -63,7 +63,7 @@ Higher is better. A score of 1.0 means all predictions were correct. A model tha
 
 F1 Macro and trainable parameter count as a function of LoRA rank (30 training steps each, showing relative trend):
 
-![Rank Sensitivity](results/plots/rank_sensitivity.png)
+![Rank Sensitivity](assets/plots/rank_sensitivity.png)
 
 | LoRA Rank (r) | F1 Macro | RCS | Trainable Params |
 |---|---|---|---|
@@ -90,8 +90,8 @@ F1 Macro and trainable parameter count as a function of LoRA rank (30 training s
 
 ```bash
 # 1. Clone and set up environment
-git clone https://github.com/swarat17/peft-regime-benchmark.git
-cd peft-regime-benchmark
+git clone https://github.com/swarat17/market-regime-detection.git
+cd market-regime-detection
 
 # 2. Install PyTorch with CUDA (do this first)
 pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cu121
